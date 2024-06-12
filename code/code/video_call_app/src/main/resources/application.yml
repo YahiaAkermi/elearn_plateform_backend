@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: video_call_app
+  cloud:
+    config:
+      import-check:
+        enabled: false
+      openfeign:
+        client:
+          config:
+            default:
+              logger-level: FULL
+  datasource:
+    url: jdbc:h2:mem:testdb
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  h2:
+    console:
+      enabled: true
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.H2Dialect
+
+
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8888/eureka
+server:
+  port: 8080

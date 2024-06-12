@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conference</title>
+  <link rel="stylesheet" href="/conf/css/styles.css">
+  <link rel="stylesheet" href="/conf/css/index.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body>
+
+<div class="container">
+  <div class="main">
+    <div class="new-meeting">
+      <h5 id="username-text"></h5>
+      <button id="newMeetingBtn" style="display: none;">Create a New Meeting</button>
+    </div>
+  </div>
+
+  <!-- Loading message element -->
+  <div id="loadingMessage" style="display: none;">Loading...</div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    const idLecture = urlParams.get('idLecture'); // Récupération de l'idLecture
+    const roomId = urlParams.get('roomId')
+
+
+    if (token && idLecture) {
+      const decodedToken = parseJwt(token);
+      const username = decodedToken.sub;
+      const role = decodedToken.roles;
+      localStorage.setItem('connectedUser', username);
+      localStorage.setItem('roleUser', role);
+      localStorage.setItem('token',token);
+      localStorage.setItem('idLecture', idLecture); // Stockage de l'idLecture
+      if(roomId){
+        handleJoinMeeting(roomId);
+      }
+
+      updateUI(username, role);
+    } else {
+      alert('Not logged in');
+      document.getElementById('loadingMessage').innerText = 'No token or lecture ID found';
+    }
+  });
+
+
+  function parseJwt(token) {
+    try {
+      const base64Url = token.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(atob(base64).split('').map(function(c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      }).join(''));
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Invalid token:', e);
+      return null;
+    }
+  }
+
+  function updateUI(username, role) {
+    const usernameText = document.getElementById("username-text");
+    if (!username) {
+      alert('You should be logged in');
+      window.location.href = 'http://localhost:5173'; // Redirect to login page or display login prompt
+      return;
+    }
+    usernameText.innerText = ` ${username}`;
+
+    const newMeetingBtn = document.getElementById("newMeetingBtn");
+    const joinMeetingBtn = document.getElementById("joinMeetingBtn");
+    const meetingName = document.getElementById("meetingName");
+
+    if (role === "ROLE_STUDENT") {
+      newMeetingBtn.style.display = "none";
+    } else if (role === "ROLE_TEACHER") {
+      newMeetingBtn.style.display = "block";
+
+    }
+  }
+
+  function handleNewMeeting() {
+    const connectedUser = localStorage.getItem("connectedUser");
+    const userConfirmed = confirm("You are about to start a new meeting. Proceed?");
+    if (userConfirmed) {
+      window.location.href = `videocall.html?username=${connectedUser}`;
+    }
+  }
+
+  function handleJoinMeeting(roomId) {
+    const connectedUser = localStorage.getItem("connectedUser");
+
+    if (roomId === "") {
+      alert("Please enter a room ID");
+      return;
+    }
+    const url = `videocall.html?roomID=${roomId}&username=${connectedUser}`;
+    window.location.href = url;
+  }
+
+  document.getElementById('newMeetingBtn').addEventListener('click', handleNewMeeting);
+</script>
+
+</body>
+</html>
